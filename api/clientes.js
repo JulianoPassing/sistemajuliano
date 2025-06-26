@@ -1,4 +1,5 @@
 const mysql = require('mysql2/promise');
+const url = require('url');
 
 module.exports = async (req, res) => {
   const connection = await mysql.createConnection({
@@ -21,6 +22,19 @@ module.exports = async (req, res) => {
         [razao, cnpj, ie, endereco, bairro, cidade, estado, cep, email, telefone, transporte, prazo, obs]
       );
       res.status(201).json({ id: result.insertId, message: 'Cliente cadastrado com sucesso!' });
+      return;
+    }
+
+    if (req.method === 'DELETE') {
+      // Pega o id da URL: /api/clientes/:id
+      const parsedUrl = url.parse(req.url, true);
+      const id = parsedUrl.pathname.split('/').pop();
+      if (!id || isNaN(Number(id))) {
+        res.status(400).json({ error: 'ID inválido para exclusão.' });
+        return;
+      }
+      await connection.execute('DELETE FROM clientes WHERE id = ?', [id]);
+      res.status(200).json({ message: 'Cliente removido com sucesso!' });
       return;
     }
 
